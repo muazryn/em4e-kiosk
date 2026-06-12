@@ -280,9 +280,20 @@ const LOC_TEXT = {
 interface KioskSimulatorProps {
   questions: QuizQuestion[];
   onResetQuestions: () => void;
+  isPresentation?: boolean;
+  isBorderless?: boolean;
+  onExitPresentation?: () => void;
+  onToggleFullscreen?: () => void;
 }
 
-export default function KioskSimulator({ questions, onResetQuestions }: KioskSimulatorProps) {
+export default function KioskSimulator({ 
+  questions, 
+  onResetQuestions,
+  isPresentation = false,
+  isBorderless = false,
+  onExitPresentation,
+  onToggleFullscreen
+}: KioskSimulatorProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number | null>(null); // null means welcome screen
   const [score, setScore] = useState<number>(0);
   const [isFinished, setIsFinished] = useState<boolean>(false);
@@ -602,54 +613,67 @@ export default function KioskSimulator({ questions, onResetQuestions }: KioskSim
   const theme = getThemeStyles();
 
   return (
-    <div className="flex flex-col items-center">
+    <div className={`flex flex-col items-center ${isBorderless ? "w-full h-full" : "w-full"}`}>
       
       {/* Theme and Volume bar */}
-      <div className="w-full max-w-[1200px] mb-4 flex flex-col sm:flex-row items-center justify-between bg-slate-900 p-3.5 rounded-2xl border border-slate-800 gap-3">
-        <div className="flex items-center gap-2">
-          <Sliders className="h-4 w-4 text-slate-400" />
-          <span className="text-xs font-semibold text-slate-300 uppercase tracking-widest font-mono">
-            Kiosk Hardware Frame:
-          </span>
-        </div>
-        
-        <div className="flex flex-wrap gap-1">
-          {["toybox-playground", "brushed-steel", "classic-wood", "royal-vault", "digital-hologram"].map((t) => (
+      {!isPresentation && (
+        <div className="w-full max-w-[1200px] mb-4 flex flex-col sm:flex-row items-center justify-between bg-slate-900 p-3.5 rounded-2xl border border-slate-800 gap-3">
+          <div className="flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-slate-400" />
+            <span className="text-xs font-semibold text-slate-300 uppercase tracking-widest font-mono">
+              Kiosk Hardware Frame:
+            </span>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-1.5">
+            {["toybox-playground", "brushed-steel", "classic-wood", "royal-vault", "digital-hologram"].map((t) => (
+              <button
+                 id={`btn_theme_${t}`}
+                key={t}
+                onClick={() => {
+                  setKioskTheme(t as KioskTheme);
+                  handlePlayClick();
+                }}
+                className={`p-1 px-3 rounded-md text-[10px] font-semibold uppercase tracking-wider cursor-pointer transition-all ${
+                  kioskTheme === t
+                    ? "bg-slate-100 text-slate-900 shadow"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                }`}
+              >
+                {t === "toybox-playground" ? "🧒 Toybox" : t === "digital-hologram" ? "Cyber" : t.split("-")[0]}
+              </button>
+            ))}
+
             <button
-               id={`btn_theme_${t}`}
-              key={t}
-              onClick={() => {
-                setKioskTheme(t as KioskTheme);
-                handlePlayClick();
-              }}
-              className={`p-1 px-3 rounded-md text-[10px] font-semibold uppercase tracking-wider cursor-pointer transition-all ${
-                kioskTheme === t
-                  ? "bg-slate-100 text-slate-900 shadow"
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700"
-              }`}
+              id="btn_enter_fullscreen_kiosk"
+              onClick={onToggleFullscreen}
+              className="ml-3 p-1 px-3 rounded-md text-[10px] font-extrabold uppercase tracking-wider cursor-pointer bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-[#10b981] hover:to-[#059669] text-white active:scale-95 shadow transition-all flex items-center gap-1"
+              title="Activate full screen presentation mode"
             >
-              {t === "toybox-playground" ? "🧒 Toybox" : t === "digital-hologram" ? "Cyber" : t.split("-")[0]}
+              🖥️ Kiosk Fullscreen
             </button>
-          ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Touch Screen Terminal Bezel Frame */}
-      <div className={`${theme.frame} w-full max-w-[1200px] aspect-[16/9] flex flex-col transition-all duration-300 relative`}>
+      <div className={`${isBorderless ? "w-full h-full" : theme.frame + " w-full max-w-[1200px] aspect-[16/9]"} flex flex-col transition-all duration-300 relative`}>
         
         {/* Physical hardware elements simulating real kiosk installation */}
-        <div className="h-6 flex items-center justify-center relative bg-slate-950/40 rounded-t-lg">
-          <div className="absolute top-[8px] flex gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${soundEnabled ? "bg-emerald-500 animate-pulse" : "bg-slate-500"}`} />
-            <div className="w-20 h-1.5 bg-slate-800 rounded-full" />
+        {!isBorderless && (
+          <div className="h-6 flex items-center justify-center relative bg-slate-950/40 rounded-t-lg">
+            <div className="absolute top-[8px] flex gap-1.5">
+              <div className={`w-2 h-2 rounded-full ${soundEnabled ? "bg-emerald-500 animate-pulse" : "bg-slate-500"}`} />
+              <div className="w-20 h-1.5 bg-slate-800 rounded-full" />
+            </div>
+            <span className="text-[9px] text-slate-500 tracking-[0.2em] font-mono absolute right-4 uppercase">
+              Touch Interactive Terminal
+            </span>
           </div>
-          <span className="text-[9px] text-slate-500 tracking-[0.2em] font-mono absolute right-4 uppercase">
-            Touch Interactive Terminal
-          </span>
-        </div>
+        )}
 
         {/* Screen Content Window */}
-        <div className={`${theme.screen} p-3.5 sm:p-5 lg:p-6 pb-3 sm:pb-3 lg:pb-5 flex-grow flex flex-col justify-between h-0 overflow-y-auto rounded-b-xl relative`}>
+        <div className={`${theme.screen} p-3.5 sm:p-5 lg:p-6 pb-3 sm:pb-3 lg:pb-5 flex-grow flex flex-col justify-between h-0 overflow-y-auto ${isBorderless ? "rounded-none" : "rounded-b-xl"} relative`}>
           
           {/* GLOBAL FLASH-PLAYER TOP HEADER (Visible after language is chosen) */}
           {isLanguageSelected && (
