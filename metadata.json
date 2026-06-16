@@ -1,0 +1,6 @@
+{
+  "name": "Numismatics Kiosk Simulator",
+  "description": "An interactive touchscreen kiosk simulator and Unity developer workbench for a numismatics and economics quiz.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
